@@ -108,6 +108,11 @@ async def on_message(message):
 						server.status()
 						server.ping()
 						totalonline += 1
+						try:
+							with open("online.txt", "r") as f:
+								os.remove("online.txt")
+						except:
+							ignorethisvaluelol = 0
 						with open("online.txt", "a+") as f:
 							f.write(f"{randomip}\n")
 					except Exception as e:
