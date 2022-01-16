@@ -96,7 +96,7 @@ async def on_message(message):
 		totalonline = []
 		try:
 			with open("online.txt", "w+") as f:
-				f.write(" ")
+				f.write("")
 		except:
 			ignorethisvaluelol = 0
 			
