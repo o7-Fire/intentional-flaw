@@ -15,7 +15,7 @@ client = discord.Client()
 async def on_ready():
 	print(f'{client.user} has connected to Discord!')
 
-totalonline = 0
+totalonline = []
 @client.event
 async def on_message(message):
 	global totalonline
@@ -93,12 +93,13 @@ async def on_message(message):
 		with open(datafile, "r") as f:
 			ips = f.read().split("\n")
 		total = len(ips)
-		totalonline = 0
+		totalonline = []
 		try:
-			with open("online.txt", "r") as f:
-				os.remove("online.txt")
+			with open("online.txt", "w+") as f:
+				f.write(" ")
 		except:
 			ignorethisvaluelol = 0
+			
 		for randomip in ips:
 			done = False
 			while done == False:
@@ -112,9 +113,7 @@ async def on_message(message):
 						server = MinecraftServer(ip, int(port))
 						server.status()
 						server.ping()
-						totalonline += 1
-						with open("online.txt", "a+") as f:
-							f.write(f"{randomip}\n")
+						totalonline.append(randomip)
 					except Exception as e:
 						ignorethisvaluelol = 0
 				if threading.active_count() < threadlimit:
@@ -122,8 +121,13 @@ async def on_message(message):
 					t1.start()
 					done = True
 				else:
-					time.sleep(0.1)
-		await message.channel.send(f"Finished scanning\nTotal servers: {total}\nServers online: {totalonline}\nServers offline: {total - totalonline}")
+					time.sleep(1)
+					
+		totalonline = list(set(totalonline))
+		with open("online.txt", "a+") as f:
+			for ip in totalonline:
+				f.write(f"{ip}\n")
+		await message.channel.send(f"Finished scanning\nTotal servers: {total}\nServers online: {len(totalonline)}\nServers offline: {total - len(totalonline)}")
 				
 			
 	
