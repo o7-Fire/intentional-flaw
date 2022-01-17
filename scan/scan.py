@@ -1,20 +1,18 @@
 from mcstatus import MinecraftServer
 import random
 import threading
+import time
 
 savefile = "found.txt"
-threadcount = 1000
+threadcount = 2000
 
 
 def randomip():
-	return f"{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+	return f"{random.randint(0, 223)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
-
-def do():
-	while True:
+while True:
+	def do():
 		ip = randomip()
-		port = random.randint(0, 65535)
-		
 		try:
 			server = MinecraftServer(ip, 25565)
 			status = server.status()
@@ -28,12 +26,12 @@ def do():
 				f.write(f"\n{ip}:25565 {status.version.name}")
 		except:
 			gudfgudfg = 0
-
-
-# print(f"invalid: {ip}")
-
-
-for i in range(threadcount):
-	t1 = threading.Thread(target=do)
-	t1.start()
-	print(f"created thread: {str(i + 1)}")
+			
+	if threading.active_count() < threadcount:
+		try:
+			t1 = threading.Thread(target=do)
+			t1.start()
+		except:
+			time.sleep(1)
+	else:
+		time.sleep(1)
