@@ -4,6 +4,7 @@ import threading
 import discord
 import os
 import time
+import traceback
 
 TOKEN = os.getenv("TOKEN")
 datafile = "found.txt"
@@ -23,6 +24,32 @@ async def on_message(message):
 	#	return
 	if message.author.id == client.user.id:
 		return
+	if message.content.startswith("scanip"):
+		if len(message.content.split(" ")) != 3:
+			await message.channel.send("Context required, usage: scanip [ip] [port]")
+		else:
+			ip = message.content.split(" ")[1]
+			port = message.content.split(" ")[2]
+			server = MinecraftServer(ip, int(port))
+			try:
+				status = server.status()
+				query = server.query()
+				
+				embedVar = discord.Embed(title=f"{ip}:{port} ({query.players.online} Online)",
+				                         description=f"{query.motd}",
+				                         color=0x00ff00)
+				if len(query.players.names) == 0:
+					embedVar.add_field(name="Players", value=f"None", inline=False)
+				else:
+					embedVar.add_field(name="Players", value=f"{', '.join(query.players.names)}", inline=False)
+				embedVar.add_field(name="Version", value=f"{status.version.name}", inline=False)
+				await message.channel.send(embed=embedVar)
+				Active = False
+			except Exception as e:
+				embedVar = discord.Embed(title=f"{ip}:{port} (0 Online)", description=f"Offline", color=0x00ff00)
+				embedVar.add_field(name=f"Error", value=f"{e}", inline=False)
+				await message.channel.send(embed=embedVar)
+	
 	if message.content == "scan random":
 		await message.channel.send("pinging . . .")
 		Active = True
@@ -57,6 +84,7 @@ async def on_message(message):
 				#await message.channel.send(embed=embedVar)
 	
 	if message.content == "scan online":
+		await message.channel.send("pinging . . .")
 		Active = True
 		
 		while Active:
@@ -85,11 +113,12 @@ async def on_message(message):
 			except Exception as e:
 				ignorethisvaluelol = 0
 				# await message.channel.send("offline")
-				# embedVar = discord.Embed(title=f"{ip}:{port} (0 Online)", description=f"Offline", color=0x00ff00)
-				# embedVar.add_field(name=f"Error", value=f"{e}", inline=False)
-				# await message.channel.send(embed=embedVar)
+				#embedVar = discord.Embed(title=f"{ip}:{port} (0 Online)", description=f"Offline", color=0x00ff00)
+				#embedVar.add_field(name=f"Error", value=f"{traceback.format_exc()}", inline=False)
+				#await message.channel.send(embed=embedVar)
 			
 	if message.content == "scan all":
+		await message.channel.send("scanning . . .")
 		with open(datafile, "r") as f:
 			ips = f.read().split("\n")
 		total = len(ips)
@@ -108,14 +137,17 @@ async def on_message(message):
 					randomipt = randomip.split(" ")[0]
 					ip = randomipt.split(":")[0]
 					port = randomipt.split(":")[1]
-					try:
-						# print(ip, port)
-						server = MinecraftServer(ip, int(port))
-						server.status()
-						server.ping()
-						totalonline.append(randomip)
-					except Exception as e:
-						ignorethisvaluelol = 0
+					attempt = 0
+					while attempt != 3:
+						try:
+							# print(ip, port)
+							server = MinecraftServer(ip, int(port))
+							server.status()
+							server.query()
+							totalonline.append(randomip)
+						except Exception as e:
+							ignorethisvaluelol = 0
+						attempt += 1
 				if threading.active_count() < threadlimit:
 					t1 = threading.Thread(target=do)
 					t1.start()
